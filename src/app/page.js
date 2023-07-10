@@ -19,6 +19,8 @@ import Link from "next/link";
 export default function Home() {
   const { state, dispatch } = useContext(AppContext);
   const [bookDetailModule, setBookDetailModule] = useState(false);
+  const [filterBookData, setFilterBookData] = useState([]);
+  const [filterApplied, setFilterApplied] = useState(false);
   const [bookDetail, setBookDetail] = useState(null);
 
   useEffect(() => {
@@ -59,57 +61,61 @@ export default function Home() {
     },
   };
 
-  const BookCard = () => {
+  const BookCard = ({ bookItem }) => {
     return (
       <div className={styles.book_list_container}>
-        {state?.bookList?.map((item, index) => {
-          return (
-            <div
-              key={index}
-              className={styles.book_container}
-              onClick={() => {
-                setBookDetail(item);
-                setBookDetailModule(true);
-              }}
-            >
-              <div className={styles.book_image}>
-                <div className={styles.book_status}>
-                  {item?.is_liked ? (
-                    <AiTwotoneHeart color="#D80000" size={25} />
-                  ) : (
-                    <AiOutlineHeart color="#D80000" size={25} />
-                  )}
+        {bookItem?.length != 0 ? (
+          bookItem?.map((item, index) => {
+            return (
+              <div
+                key={index}
+                className={styles.book_container}
+                onClick={() => {
+                  setBookDetail(item);
+                  setBookDetailModule(true);
+                }}
+              >
+                <div className={styles.book_image}>
+                  <div className={styles.book_status}>
+                    {item?.is_liked ? (
+                      <AiTwotoneHeart color="#D80000" size={25} />
+                    ) : (
+                      <AiOutlineHeart color="#D80000" size={25} />
+                    )}
+                  </div>
+                  <Image
+                    loader={imageLoader}
+                    src={item?.imageLink}
+                    alt="Picture of the author"
+                    width={275}
+                    height={391}
+                  />
                 </div>
-                <Image
-                  loader={imageLoader}
-                  src={item?.imageLink}
-                  alt="Picture of the author"
-                  width={275}
-                  height={391}
-                />
-              </div>
-              <div className={styles.book_detail}>
-                <p>{truncateSentence(item?.title, 18)}</p>
-                <div className={styles.rating_container}>
-                  {Array(5)
-                    ?.fill(0)
-                    ?.map((mapItem, index) => {
-                      return item?.rating <= index ? (
-                        <div key={index}>
-                          <AiOutlineStar />
-                        </div>
-                      ) : (
-                        <div key={index}>
-                          <AiTwotoneStar color="#DF9401" />
-                        </div>
-                      );
-                    })}
+                <div className={styles.book_detail}>
+                  <p>{truncateSentence(item?.title, 18)}</p>
+                  <div className={styles.rating_container}>
+                    {Array(5)
+                      ?.fill(0)
+                      ?.map((mapItem, index) => {
+                        return item?.rating <= index ? (
+                          <div key={index}>
+                            <AiOutlineStar />
+                          </div>
+                        ) : (
+                          <div key={index}>
+                            <AiTwotoneStar color="#DF9401" />
+                          </div>
+                        );
+                      })}
+                  </div>
+                  <span>$ {item?.pages}</span>
                 </div>
-                <span>$ {item?.pages}</span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <h1 className={styles.bookError}> No Book Found </h1>
+        )}
       </div>
     );
   };
@@ -124,6 +130,13 @@ export default function Home() {
     );
   };
 
+  const SearchBook = (e) => {
+    e.target.value ? setFilterApplied(true) : setFilterApplied(false);
+    let response = state?.bookList?.filter((obj) =>
+      obj.title.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilterBookData(response);
+  };
   return (
     <>
       <Modal
@@ -218,7 +231,7 @@ export default function Home() {
             />
             <div className={styles.search_container}>
               <CiSearch size={20} />
-              <input placeholder="Search..." />
+              <input placeholder="Search..." onChange={(e) => SearchBook(e)} />
             </div>
             <Image
               loader={imageLoader}
@@ -251,7 +264,13 @@ export default function Home() {
               <MoonLoader color={"#4C7EA8"} loading={true} size={50} />
             </div>
           ) : (
-            <BookCard />
+            <>
+              {filterApplied ? (
+                <BookCard bookItem={filterBookData} />
+              ) : (
+                <BookCard bookItem={state?.bookList} />
+              )}
+            </>
           )}
         </div>
       </div>
