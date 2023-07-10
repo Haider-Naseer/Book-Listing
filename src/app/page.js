@@ -1,95 +1,260 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
+import React, { useEffect, useContext, useState } from "react";
+import MoonLoader from "react-spinners/MoonLoader";
+import Image from "next/image";
+import * as bookListApi from "../../services/api/book-list";
+import { AppContext } from "../../utils/store";
+import styles from "./page.module.css";
+import { CiSearch } from "react-icons/ci";
+import {
+  AiTwotoneStar,
+  AiOutlineStar,
+  AiOutlineHeart,
+  AiTwotoneHeart,
+} from "react-icons/ai";
+import { FiExternalLink } from "react-icons/fi";
+import Modal from "react-modal";
+import Link from "next/link";
 
 export default function Home() {
+  const { state, dispatch } = useContext(AppContext);
+  const [bookDetailModule, setBookDetailModule] = useState(false);
+  const [bookDetail, setBookDetail] = useState(null);
+
+  useEffect(() => {
+    FetchBooks();
+  }, []);
+
+  const FetchBooks = async () => {
+    let {
+      response: { status },
+      data: { data },
+    } = await bookListApi?.getBooks();
+    if (status == 200) {
+      dispatch({ type: "Book_List", payload: data });
+    }
+  };
+
+  const imageLoader = ({ src, width, quality }) => {
+    return `${src}?w=${width}&q=${quality || 100}`;
+  };
+
+  function truncateSentence(sentence, characterCount) {
+    if (sentence.length <= characterCount) {
+      return sentence;
+    } else {
+      return sentence.slice(0, characterCount) + "...";
+    }
+  }
+
+  const customStyles = {
+    content: {
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+      padding: "0px",
+    },
+  };
+
+  const BookCard = () => {
+    return (
+      <div className={styles.book_list_container}>
+        {state?.bookList?.map((item, index) => {
+          return (
+            <div
+              key={index}
+              className={styles.book_container}
+              onClick={() => {
+                setBookDetail(item);
+                setBookDetailModule(true);
+              }}
+            >
+              <div className={styles.book_image}>
+                <div className={styles.book_status}>
+                  {item?.is_liked ? (
+                    <AiTwotoneHeart color="#D80000" size={25} />
+                  ) : (
+                    <AiOutlineHeart color="#D80000" size={25} />
+                  )}
+                </div>
+                <Image
+                  loader={imageLoader}
+                  src={item?.imageLink}
+                  alt="Picture of the author"
+                  width={275}
+                  height={391}
+                />
+              </div>
+              <div className={styles.book_detail}>
+                <p>{truncateSentence(item?.title, 18)}</p>
+                <div className={styles.rating_container}>
+                  {Array(5)
+                    ?.fill(0)
+                    ?.map((mapItem, index) => {
+                      return item?.rating <= index ? (
+                        <div key={index}>
+                          <AiOutlineStar />
+                        </div>
+                      ) : (
+                        <div key={index}>
+                          <AiTwotoneStar color="#DF9401" />
+                        </div>
+                      );
+                    })}
+                </div>
+                <span>$ {item?.pages}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const CustomButton = ({ link, title }) => {
+    return (
+      <Link href={link}>
+        <button>
+          {title} <FiExternalLink />
+        </button>
+      </Link>
+    );
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
+    <>
+      <Modal
+        isOpen={bookDetailModule}
+        onRequestClose={() => setBookDetailModule(false)}
+        style={customStyles}
+      >
+        <div className={styles.detail_container}>
+          <Image
+            loader={imageLoader}
+            src={bookDetail?.imageLink}
+            alt="Picture of the author"
+            width={300}
+            height={500}
+          />
+          <div className={styles.book_detail_content}>
+            <h1>{bookDetail?.title}</h1>
+            <div className={styles.book_summary}>
+              <div className={styles.summary_section}>
+                <h5>Rating</h5>
+                <div className={styles.container_inline_style}>
+                  {Array(5)
+                    ?.fill(0)
+                    ?.map((mapItem, index) => {
+                      return bookDetail?.rating <= index ? (
+                        <div key={index}>
+                          <AiOutlineStar />
+                        </div>
+                      ) : (
+                        <div key={index}>
+                          <AiTwotoneStar color="#DF9401" />
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+              <div className={styles.summary_section}>
+                <h5>Reviews</h5>
+                <span>( {bookDetail?.reviews} )</span>
+              </div>
+              <div className={styles.summary_section}>
+                <h5>Price</h5>
+                <span>( {bookDetail?.price} )</span>
+              </div>
+            </div>
+
+            <div
+              className={`${styles.book_detail_summary} ${styles.container_inline_style}`}
+            >
+              <h3>Author:</h3>
+              <span>{bookDetail?.author}</span>
+            </div>
+            <div
+              className={`${styles.book_detail_summary} ${styles.container_inline_style}`}
+            >
+              <h3>Country:</h3>
+              <span>{bookDetail?.country}</span>
+            </div>
+            <div
+              className={`${styles.book_detail_summary} ${styles.container_inline_style}`}
+            >
+              <h3>language:</h3>
+              <span>{bookDetail?.language}</span>
+            </div>
+            <div
+              className={`${styles.book_detail_summary} ${styles.container_inline_style}`}
+            >
+              <h3>Year:</h3>
+              <span>{bookDetail?.year}</span>
+            </div>
+            <div
+              className={`${styles.book_detail_summary} ${styles.container_inline_style}`}
+            >
+              <h3>Page:</h3>
+              <span>{bookDetail?.pages}</span>
+            </div>
+            <div className={styles.button_container}>
+              <CustomButton link={bookDetail?.link} title={"View Detail"} />
+            </div>
+          </div>
+        </div>
+      </Modal>
+      <div className={styles.container}>
+        <div className={styles.subContainer}>
+          <div className={styles.header}>
             <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+              loader={imageLoader}
+              src={"/assets/Images/logo.png"}
+              alt="Picture of the author"
+              width={51}
+              height={56}
             />
-          </a>
+            <div className={styles.search_container}>
+              <CiSearch size={20} />
+              <input placeholder="Search..." />
+            </div>
+            <Image
+              loader={imageLoader}
+              src={"/assets/Images/profile.png"}
+              alt="Picture of the author"
+              width={51}
+              height={56}
+            />
+          </div>
+          <div className={styles.hero_section}>
+            <div className={styles.hero_section_text}>
+              <h1>Lorem ipsum dolor sit amet consectetur.</h1>
+              <h2>
+                Lorem ipsum dolor sit amet consectetur. Viverr scelerisqu.
+              </h2>
+            </div>
+            <div className={styles.hero_section_image}>
+              <Image
+                loader={imageLoader}
+                src={"/assets/Images/hero_image.png"}
+                alt="Picture of the author"
+                width={650}
+                height={301}
+              />
+            </div>
+          </div>
+
+          {state?.bookList?.length == 0 ? (
+            <div className={styles.book_list_loader}>
+              <MoonLoader color={"#4C7EA8"} loading={true} size={50} />
+            </div>
+          ) : (
+            <BookCard />
+          )}
         </div>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </>
+  );
 }
