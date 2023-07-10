@@ -114,7 +114,7 @@ export default function Home() {
             );
           })
         ) : (
-          <h1 className={styles.bookError}> No Book Found </h1>
+          <h1 className={styles.bookError}> No Book Found</h1>
         )}
       </div>
     );
@@ -231,7 +231,10 @@ export default function Home() {
             />
             <div className={styles.search_container}>
               <CiSearch size={20} />
-              <input placeholder="Search..." onChange={(e) => SearchBook(e)} />
+              <input
+                placeholder="Search By Book Tittle"
+                onChange={(e) => SearchBook(e)}
+              />
             </div>
             <Image
               loader={imageLoader}
