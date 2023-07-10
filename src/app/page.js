@@ -262,6 +262,14 @@ export default function Home() {
             </div>
           </div>
 
+          <div className={`${styles.search_container} ${styles.mobile_search}`}>
+            <CiSearch size={20} />
+            <input
+              placeholder="Search By Book Tittle"
+              onChange={(e) => SearchBook(e)}
+            />
+          </div>
+
           {state?.bookList?.length == 0 ? (
             <div className={styles.book_list_loader}>
               <MoonLoader color={"#4C7EA8"} loading={true} size={50} />
